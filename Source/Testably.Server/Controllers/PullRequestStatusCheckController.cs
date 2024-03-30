@@ -88,11 +88,19 @@ public class PullRequestStatusCheckController : ControllerBase
 		    titleProperty.GetString() == null)
 		{
 			return StatusCode(StatusCodes.Status500InternalServerError,
-				$"GitHub API '{requestUri}' returned an invalid response");
+				$"GitHub API '{requestUri}' returned an invalid response (missing title).");
+		}
+
+		if (!jsonDocument.RootElement.TryGetProperty("head", out var headProperty) ||
+		    !headProperty.TryGetProperty("sha", out var shaProperty) ||
+		    shaProperty.GetString() == null)
+		{
+			return StatusCode(StatusCodes.Status500InternalServerError,
+				$"GitHub API '{requestUri}' returned an invalid response (missing head.sha).");
 		}
 
 		var title = titleProperty.GetString()!;
-		var commitSha = pullRequestModel.Payload.PullRequest.MergeCommitSha;
+		var commitSha = shaProperty.GetString();
 		var statusUri = $"https://api.github.com/repos/{owner}/{repo}/statuses/{commitSha}";
 		var hasValidTitle = ValidateTitle(title);
 		// https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28#create-a-commit-status
