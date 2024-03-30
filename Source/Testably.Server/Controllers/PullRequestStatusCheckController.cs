@@ -1,6 +1,5 @@
 ﻿using System.Net.Http.Headers;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -62,7 +61,7 @@ public class PullRequestStatusCheckController : ControllerBase
 		}
 
 		if (pullRequestModel.Repository.Private ||
-			pullRequestModel.Repository.Owner.Login != RepositoryOwner)
+		    pullRequestModel.Repository.Owner.Login != RepositoryOwner)
 		{
 			return BadRequest($"Only public repositories from '{RepositoryOwner}' are supported!");
 		}
@@ -94,15 +93,15 @@ public class PullRequestStatusCheckController : ControllerBase
 			cancellationToken: cancellationToken);
 
 		if (!jsonDocument.RootElement.TryGetProperty("title", out var titleProperty) ||
-			titleProperty.GetString() == null)
+		    titleProperty.GetString() == null)
 		{
 			return StatusCode(StatusCodes.Status500InternalServerError,
 				$"GitHub API '{requestUri}' returned an invalid response (missing title).");
 		}
 
 		if (!jsonDocument.RootElement.TryGetProperty("head", out var headProperty) ||
-			!headProperty.TryGetProperty("sha", out var shaProperty) ||
-			shaProperty.GetString() == null)
+		    !headProperty.TryGetProperty("sha", out var shaProperty) ||
+		    shaProperty.GetString() == null)
 		{
 			return StatusCode(StatusCodes.Status500InternalServerError,
 				$"GitHub API '{requestUri}' returned an invalid response (missing head.sha).");
