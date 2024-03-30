@@ -1,4 +1,8 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Testably.Server;
 
@@ -14,6 +18,8 @@ public class Program
         builder.Services.AddControllers()
             .AddJsonOptions(o
                 => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
+
+        builder.Configuration.AddJsonFile("appsettings.Secrets.json", true);
 
         var app = builder.Build();
 
