@@ -1,46 +1,58 @@
+using System.Reflection;
 using System.Text.Json;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Serilog;
+using ILogger = Serilog.ILogger;
 
 namespace Testably.Server;
 
 public class Program
 {
-    public static void Main(string[] args)
-    {
-        var builder = WebApplication.CreateBuilder(args);
+	public static void Main(string[] args)
+	{
+		Directory.SetCurrentDirectory(
+			Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!);
 
-        // Add services to the container.
-        builder.Services.AddHttpClient();
-        builder.Services.AddRazorPages();
-        builder.Services.AddControllers()
-            .AddJsonOptions(o
-                => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
+		var builder = WebApplication.CreateBuilder(args);
 
-        builder.Configuration.AddJsonFile("appsettings.Secrets.json", true);
+		// Add services to the container.
+		builder.Services.AddHttpClient();
+		builder.Services.AddRazorPages();
+		builder.Services.AddControllers()
+			.AddJsonOptions(o
+				=> o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
 
-        var app = builder.Build();
+		builder.Configuration.AddJsonFile("appsettings.Secrets.json", true);
+		builder.Host.UseSerilog((context, configuration)
+			=> configuration.ReadFrom.Configuration(context.Configuration));
 
-        // Configure the HTTP request pipeline.
-        if (!app.Environment.IsDevelopment())
-        {
-            app.UseExceptionHandler("/Error");
-            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-            app.UseHsts();
-        }
+		var app = builder.Build();
 
-        app.UseHttpsRedirection();
-        app.UseStaticFiles();
+		// Configure the HTTP request pipeline.
+		if (!app.Environment.IsDevelopment())
+		{
+			app.UseExceptionHandler("/Error");
+			// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+			app.UseHsts();
+		}
 
-        app.UseRouting();
+		app.UseHttpsRedirection();
+		app.UseStaticFiles();
 
-        app.UseAuthorization();
+		app.UseRouting();
 
-        app.MapRazorPages();
-        app.MapControllers();
+		app.UseAuthorization();
 
-        app.Run();
-    }
+		app.MapRazorPages();
+		app.MapControllers();
+
+		app.Run();
+	}
+
+	private static ILogger CreateSerilogLogger()
+	{
+		var logPath = $"logs/log.txt";
+		return new LoggerConfiguration()
+			.WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
+			.CreateLogger();
+	}
 }
