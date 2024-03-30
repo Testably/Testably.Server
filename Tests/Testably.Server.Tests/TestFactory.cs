@@ -7,30 +7,30 @@ namespace Testably.Server.Tests;
 
 public class TestFactory : WebApplicationFactory<Program>
 {
-    private readonly IHttpClientFactory? _httpClientFactory;
+	private readonly IHttpClientFactory? _httpClientFactory;
 
-    public TestFactory(IHttpClientFactory? httpClientFactory = null)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
+	public TestFactory(IHttpClientFactory? httpClientFactory = null)
+	{
+		_httpClientFactory = httpClientFactory;
+	}
 
-    /// <inheritdoc />
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        base.ConfigureWebHost(builder);
-        builder.ConfigureTestServices(services =>
-        {
-            if (_httpClientFactory != null)
-            {
-                var descriptor =
-                    services.SingleOrDefault(d => d.ServiceType == _httpClientFactory.GetType());
-                if (descriptor != null)
-                {
-                    services.Remove(descriptor);
-                }
+	/// <inheritdoc />
+	protected override void ConfigureWebHost(IWebHostBuilder builder)
+	{
+		base.ConfigureWebHost(builder);
+		builder.ConfigureTestServices(services =>
+		{
+			if (_httpClientFactory != null)
+			{
+				var descriptor =
+					services.SingleOrDefault(d => d.ServiceType == _httpClientFactory.GetType());
+				if (descriptor != null)
+				{
+					services.Remove(descriptor);
+				}
 
-                services.AddSingleton(_httpClientFactory);
-            }
-        });
-    }
+				services.AddSingleton(_httpClientFactory);
+			}
+		});
+	}
 }
