@@ -60,7 +60,7 @@ public class PullRequestStatusCheckController : ControllerBase
 			return BadRequest($"Only public repositories from '{RepositoryOwner}' are supported!");
 		}
 
-		using var client = _clientFactory.CreateClient();
+		using var client = _clientFactory.CreateClient("Proxied");
 
 		var owner = pullRequestModel.Payload.Repository.Owner.Login;
 		var repo = pullRequestModel.Payload.Repository.Name;

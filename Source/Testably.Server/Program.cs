@@ -1,3 +1,4 @@
+using System.Net;
 using System.Reflection;
 using System.Text.Json;
 using Serilog;
@@ -14,8 +15,13 @@ public class Program
 
 		var builder = WebApplication.CreateBuilder(args);
 
+		var webProxy = new WebProxy("http://winproxy.server.lan:3128");
 		// Add services to the container.
-		builder.Services.AddHttpClient();
+		builder.Services.AddHttpClient("Proxied")
+			.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+		{
+			Proxy = webProxy
+		});
 		builder.Services.AddRazorPages();
 		builder.Services.AddControllers()
 			.AddJsonOptions(o
