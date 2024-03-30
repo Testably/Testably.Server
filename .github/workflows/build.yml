@@ -26,9 +26,15 @@ jobs:
       run: dotnet publish -c Release --output /home/runner/work/Testably.Server/Testably.Server/publish/ Source/Testably.Server/Testably.Server.csproj
     - name: Shutdown webpage
       shell: pwsh
+      continue-on-error: true
       run: |
-        Invoke-WebRequest -Uri http://testably.com/lifetime/quit -Method POST
-        Start-Sleep -Seconds 5
+        try { 
+          (Invoke-WebRequest -Uri https://testably.org/lifetime/quit -Method POST -ErrorAction Stop).BaseResponse
+          Write-Information "The server was shutdown"
+          Start-Sleep -Seconds 5
+        } catch [System.Net.WebException] { 
+          Write-Warning "An exception was caught: $($_.Exception.Message)"
+        }
     - name: Upload ftp
       uses: sebastianpopp/ftp-action@releases/v2
       with:

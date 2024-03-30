@@ -51,16 +51,17 @@ public class PullRequestStatusCheckController : ControllerBase
 
 	[HttpPost]
 	public async Task<IActionResult> OnPullRequestChanged(
-		[FromBody] WebhookModel<PullRequestWebhookModel> pullRequestModel,
+		[FromBody] PullRequestWebhookModel pullRequestModel,
 		CancellationToken cancellationToken)
 	{
-		if (pullRequestModel.Event != "pull_request")
+		if (!HttpContext.Request.Headers.TryGetValue("x-github-event", out var value) ||
+		    value != "pull_request")
 		{
 			return Ok("Ignore all events except 'pull_request'.");
 		}
 
-		if (pullRequestModel.Payload.Repository.Private ||
-		    pullRequestModel.Payload.Repository.Owner.Login != RepositoryOwner)
+		if (pullRequestModel.Repository.Private ||
+		    pullRequestModel.Repository.Owner.Login != RepositoryOwner)
 		{
 			return BadRequest($"Only public repositories from '{RepositoryOwner}' are supported!");
 		}
@@ -72,9 +73,9 @@ public class PullRequestStatusCheckController : ControllerBase
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", bearerToken);
 
-		var owner = pullRequestModel.Payload.Repository.Owner.Login;
-		var repo = pullRequestModel.Payload.Repository.Name;
-		var prNumber = pullRequestModel.Payload.Number;
+		var owner = pullRequestModel.Repository.Owner.Login;
+		var repo = pullRequestModel.Repository.Name;
+		var prNumber = pullRequestModel.Number;
 		var requestUri = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
 		_logger.LogInformation("Try reading '{RequestUri}'", requestUri);
 		var response = await client
