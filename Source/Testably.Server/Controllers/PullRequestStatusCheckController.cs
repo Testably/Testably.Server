@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -59,8 +60,11 @@ public class PullRequestStatusCheckController : ControllerBase
 		{
 			return BadRequest($"Only public repositories from '{RepositoryOwner}' are supported!");
 		}
-
+		var bearerToken = _configuration.GetValue<string>("GithubBearerToken");
 		using var client = _clientFactory.CreateClient();
+		client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Testably", Assembly.GetExecutingAssembly().GetName().Version.ToString()));
+		client.DefaultRequestHeaders.Authorization =
+			new AuthenticationHeaderValue("Bearer", bearerToken);
 
 		var owner = pullRequestModel.Payload.Repository.Owner.Login;
 		var repo = pullRequestModel.Payload.Repository.Name;
@@ -71,8 +75,9 @@ public class PullRequestStatusCheckController : ControllerBase
 
 		if (!response.IsSuccessStatusCode)
 		{
+			var responseContent = await response.Content.ReadAsStringAsync();
 			return StatusCode(StatusCodes.Status500InternalServerError,
-				$"GitHub API '{requestUri}' not available");
+				$"GitHub API '{requestUri}' not available: {responseContent}");
 		}
 
 		var jsonDocument = await JsonDocument.ParseAsync(
@@ -83,12 +88,19 @@ public class PullRequestStatusCheckController : ControllerBase
 		    titleProperty.GetString() == null)
 		{
 			return StatusCode(StatusCodes.Status500InternalServerError,
-				$"GitHub API '{requestUri}' returned an invalid response");
+				$"GitHub API '{requestUri}' returned an invalid response (missing title).");
 		}
 
-		var bearerToken = _configuration.GetValue<string>("GithubBearerToken");
+		if (!jsonDocument.RootElement.TryGetProperty("head", out var headProperty) ||
+		    !headProperty.TryGetProperty("sha", out var shaProperty) ||
+		    shaProperty.GetString() == null)
+		{
+			return StatusCode(StatusCodes.Status500InternalServerError,
+				$"GitHub API '{requestUri}' returned an invalid response (missing head.sha).");
+		}
+
 		var title = titleProperty.GetString()!;
-		var commitSha = pullRequestModel.Payload.PullRequest.MergeCommitSha;
+		var commitSha = shaProperty.GetString();
 		var statusUri = $"https://api.github.com/repos/{owner}/{repo}/statuses/{commitSha}";
 		var hasValidTitle = ValidateTitle(title);
 		// https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28#create-a-commit-status
@@ -99,8 +111,6 @@ public class PullRequestStatusCheckController : ControllerBase
 			description = "The PR title must conform to the conventional commits guideline."
 		});
 		using var content = new StringContent(json);
-		client.DefaultRequestHeaders.Authorization =
-			new AuthenticationHeaderValue("Bearer", bearerToken);
 		await client.PostAsync(statusUri, content, cancellationToken);
 		return NoContent();
 	}
