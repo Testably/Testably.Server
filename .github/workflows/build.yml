@@ -31,10 +31,10 @@ jobs:
         try { 
           (Invoke-WebRequest -Uri https://testably.org/lifetime/quit -Method POST -ErrorAction Stop).BaseResponse
           Write-Information "The server was shutdown"
+          Start-Sleep -Seconds 5
         } catch [System.Net.WebException] { 
           Write-Warning "An exception was caught: $($_.Exception.Message)"
         }
-        Start-Sleep -Seconds 5
     - name: Upload ftp
       uses: sebastianpopp/ftp-action@releases/v2
       with:
