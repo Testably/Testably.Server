@@ -1,6 +1,7 @@
 name: Build
 
 on:
+  workflow_dispatch: 
   push:
     branches: [main]
 
@@ -22,7 +23,7 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Publish
-      run: dotnet publish -c Release --output /home/runner/work/Testably.Server/Testably.Server/publish/
+      run: dotnet publish -c Release --output /home/runner/work/Testably.Server/Testably.Server/publish/ Source/Testably.Server/Testably.Server.csproj
     - name: Upload ftp
       uses: sebastianpopp/ftp-action@releases/v2
       with:
