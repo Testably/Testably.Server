@@ -61,7 +61,7 @@ public class PullRequestStatusCheckController : ControllerBase
 			return BadRequest($"Only public repositories from '{RepositoryOwner}' are supported!");
 		}
 		var bearerToken = _configuration.GetValue<string>("GithubBearerToken");
-		using var client = _clientFactory.CreateClient();
+		using var client = _clientFactory.CreateClient("Proxied");
 		client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Testably", Assembly.GetExecutingAssembly().GetName().Version.ToString()));
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", bearerToken);

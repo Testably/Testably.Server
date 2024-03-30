@@ -1,7 +1,7 @@
+using System.Net;
 using System.Reflection;
 using System.Text.Json;
 using Serilog;
-using ILogger = Serilog.ILogger;
 
 namespace Testably.Server;
 
@@ -14,8 +14,14 @@ public class Program
 
 		var builder = WebApplication.CreateBuilder(args);
 
+		// https://www.ionos.de/hilfe/index.php?id=4426
+		var webProxy = new WebProxy("http://winproxy.server.lan:3128");
 		// Add services to the container.
-		builder.Services.AddHttpClient();
+		builder.Services.AddHttpClient("Proxied")
+			.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+		{
+			Proxy = webProxy
+		});
 		builder.Services.AddRazorPages();
 		builder.Services.AddControllers()
 			.AddJsonOptions(o
@@ -46,13 +52,5 @@ public class Program
 		app.MapControllers();
 
 		app.Run();
-	}
-
-	private static ILogger CreateSerilogLogger()
-	{
-		var logPath = $"logs/log.txt";
-		return new LoggerConfiguration()
-			.WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
-			.CreateLogger();
 	}
 }
