@@ -24,6 +24,11 @@ jobs:
       run: dotnet test --no-build --verbosity normal
     - name: Publish
       run: dotnet publish -c Release --output /home/runner/work/Testably.Server/Testably.Server/publish/ Source/Testably.Server/Testably.Server.csproj
+    - name: Shutdown webpage
+      shell: pwsh
+      run: |
+        Invoke-WebRequest -Uri http://testably.com/lifetime/quit -Method POST
+        Start-Sleep -Seconds 5
     - name: Upload ftp
       uses: sebastianpopp/ftp-action@releases/v2
       with:

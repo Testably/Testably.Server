@@ -59,8 +59,6 @@ public class PullRequestStatusCheckController : ControllerBase
 			return Ok("Ignore all events except 'pull_request'.");
 		}
 
-		_logger.LogInformation("Received {PullRequestWebhookModel}", pullRequestModel);
-
 		if (pullRequestModel.Payload.Repository.Private ||
 		    pullRequestModel.Payload.Repository.Owner.Login != RepositoryOwner)
 		{
@@ -78,6 +76,7 @@ public class PullRequestStatusCheckController : ControllerBase
 		var repo = pullRequestModel.Payload.Repository.Name;
 		var prNumber = pullRequestModel.Payload.Number;
 		var requestUri = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
+		_logger.LogInformation("Try reading '{RequestUri}'", requestUri);
 		var response = await client
 			.GetAsync(requestUri, cancellationToken);
 
@@ -108,6 +107,7 @@ public class PullRequestStatusCheckController : ControllerBase
 		}
 
 		var title = titleProperty.GetString()!;
+		_logger.LogInformation("Validate title for PR #{PullRequest}: '{Title}'", prNumber, title);
 		var commitSha = shaProperty.GetString();
 		var statusUri = $"https://api.github.com/repos/{owner}/{repo}/statuses/{commitSha}";
 		var hasValidTitle = ValidateTitle(title);
