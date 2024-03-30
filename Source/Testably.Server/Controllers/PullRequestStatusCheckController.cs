@@ -3,18 +3,19 @@ using System.Reflection;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Testably.Server.Models;
 
 namespace Testably.Server.Controllers;
 
-[Route("pr-status-check")]
 [ApiController]
+[Route("pr-status-check")]
 [AllowAnonymous]
 public class PullRequestStatusCheckController : ControllerBase
 {
 	private const string RepositoryOwner = "Testably";
 
 	private const string SuccessMessage =
-		"Title must conform to the conventional commits naming convention";
+		"The PR title must conform to the conventional commits guideline.";
 
 	private static readonly string[] ValidTypes =
 	{
@@ -53,6 +54,11 @@ public class PullRequestStatusCheckController : ControllerBase
 		[FromBody] WebhookModel<PullRequestWebhookModel> pullRequestModel,
 		CancellationToken cancellationToken)
 	{
+		if (pullRequestModel.Event != "pull_request")
+		{
+			return Ok("Ignore all events except 'pull_request'.");
+		}
+
 		_logger.LogInformation("Received {PullRequestWebhookModel}", pullRequestModel);
 
 		if (pullRequestModel.Payload.Repository.Private ||
@@ -60,9 +66,11 @@ public class PullRequestStatusCheckController : ControllerBase
 		{
 			return BadRequest($"Only public repositories from '{RepositoryOwner}' are supported!");
 		}
+
 		var bearerToken = _configuration.GetValue<string>("GithubBearerToken");
 		using var client = _clientFactory.CreateClient("Proxied");
-		client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Testably", Assembly.GetExecutingAssembly().GetName().Version.ToString()));
+		client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Testably",
+			Assembly.GetExecutingAssembly().GetName().Version.ToString()));
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", bearerToken);
 
@@ -108,7 +116,7 @@ public class PullRequestStatusCheckController : ControllerBase
 		{
 			context = "Testably/Conventional-Commits",
 			state = hasValidTitle ? "success" : "failure",
-			description = "The PR title must conform to the conventional commits guideline."
+			description = SuccessMessage
 		});
 		using var content = new StringContent(json);
 		await client.PostAsync(statusUri, content, cancellationToken);
@@ -149,38 +157,5 @@ public class PullRequestStatusCheckController : ControllerBase
 		}
 
 		return false;
-	}
-
-	public class WebhookModel<T>
-	{
-		public string Event { get; set; }
-		public T Payload { get; set; }
-	}
-
-	public class PullRequestWebhookModel
-	{
-		public string Action { get; set; } = "";
-		public int Number { get; set; }
-
-		public PullRequestModel PullRequest { get; set; }
-
-		public RepositoryModel Repository { get; set; }
-	}
-
-	public class PullRequestModel
-	{
-		public string MergeCommitSha { get; set; }
-	}
-
-	public class RepositoryModel
-	{
-		public string Name { get; set; }
-		public RepositoryOwnerModel Owner { get; set; }
-		public bool Private { get; set; }
-	}
-
-	public class RepositoryOwnerModel
-	{
-		public string Login { get; set; }
 	}
 }
