@@ -32,4 +32,3 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         localDir: /home/runner/work/Testably.Server/Testably.Server/publish/
         remoteDir: "."
-        options: "--delete"
