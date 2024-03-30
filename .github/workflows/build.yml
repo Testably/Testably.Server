@@ -1,6 +1,7 @@
 name: Build
 
 on:
+  workflow_dispatch: 
   push:
     branches: [main]
 
@@ -14,7 +15,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 8.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
@@ -22,13 +23,13 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Publish
-      run: dotnet publish -c Release --output /home/runner/work/grox.at/grox.at/publish/
+      run: dotnet publish -c Release --output /home/runner/work/Testably.Server/Testably.Server/publish/ Source/Testably.Server/Testably.Server.csproj
     - name: Upload ftp
       uses: sebastianpopp/ftp-action@releases/v2
       with:
         host: ftps://access938340810.webspace-data.io:990
         user: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        localDir: /home/runner/work/grox.at/grox.at/publish/
+        localDir: /home/runner/work/Testably.Server/Testably.Server/publish/
         remoteDir: "."
         options: "--delete"
