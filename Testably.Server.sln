@@ -9,6 +9,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C37E70C5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testably.Server.Tests", "Tests\Testably.Server.Tests\Testably.Server.Tests.csproj", "{4FA12A15-D59A-4D97-A300-0CEBEB196AAB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{C8FAFB67-C8F7-4E23-A599-9527195C158D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{864BF8A5-9FCB-4C03-AC86-85D52FCB4DE2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{ABE451CC-9876-4E8F-8143-89571B319C13}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build.yml = .github\workflows\build.yml
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +39,8 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{4FA12A15-D59A-4D97-A300-0CEBEB196AAB} = {C37E70C5-DD52-458B-8484-331D2241AEFB}
+		{864BF8A5-9FCB-4C03-AC86-85D52FCB4DE2} = {C8FAFB67-C8F7-4E23-A599-9527195C158D}
+		{ABE451CC-9876-4E8F-8143-89571B319C13} = {864BF8A5-9FCB-4C03-AC86-85D52FCB4DE2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9BFA302B-0E80-4120-BD6E-417BADC61D01}
