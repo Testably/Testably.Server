@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -51,16 +52,17 @@ public class PullRequestStatusCheckController : ControllerBase
 
 	[HttpPost]
 	public async Task<IActionResult> OnPullRequestChanged(
-		[FromBody] WebhookModel<PullRequestWebhookModel> pullRequestModel,
+		[FromBody] PullRequestWebhookModel pullRequestModel,
 		CancellationToken cancellationToken)
 	{
-		if (pullRequestModel.Event != "pull_request")
+		if (!HttpContext.Request.Headers.TryGetValue("x-github-event", out var value) ||
+		    value != "pull_request")
 		{
 			return Ok("Ignore all events except 'pull_request'.");
 		}
 
-		if (pullRequestModel.Payload.Repository.Private ||
-		    pullRequestModel.Payload.Repository.Owner.Login != RepositoryOwner)
+		if (pullRequestModel.Repository.Private ||
+			pullRequestModel.Repository.Owner.Login != RepositoryOwner)
 		{
 			return BadRequest($"Only public repositories from '{RepositoryOwner}' are supported!");
 		}
@@ -72,9 +74,9 @@ public class PullRequestStatusCheckController : ControllerBase
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", bearerToken);
 
-		var owner = pullRequestModel.Payload.Repository.Owner.Login;
-		var repo = pullRequestModel.Payload.Repository.Name;
-		var prNumber = pullRequestModel.Payload.Number;
+		var owner = pullRequestModel.Repository.Owner.Login;
+		var repo = pullRequestModel.Repository.Name;
+		var prNumber = pullRequestModel.Number;
 		var requestUri = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
 		_logger.LogInformation("Try reading '{RequestUri}'", requestUri);
 		var response = await client
@@ -92,15 +94,15 @@ public class PullRequestStatusCheckController : ControllerBase
 			cancellationToken: cancellationToken);
 
 		if (!jsonDocument.RootElement.TryGetProperty("title", out var titleProperty) ||
-		    titleProperty.GetString() == null)
+			titleProperty.GetString() == null)
 		{
 			return StatusCode(StatusCodes.Status500InternalServerError,
 				$"GitHub API '{requestUri}' returned an invalid response (missing title).");
 		}
 
 		if (!jsonDocument.RootElement.TryGetProperty("head", out var headProperty) ||
-		    !headProperty.TryGetProperty("sha", out var shaProperty) ||
-		    shaProperty.GetString() == null)
+			!headProperty.TryGetProperty("sha", out var shaProperty) ||
+			shaProperty.GetString() == null)
 		{
 			return StatusCode(StatusCodes.Status500InternalServerError,
 				$"GitHub API '{requestUri}' returned an invalid response (missing head.sha).");
