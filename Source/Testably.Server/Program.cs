@@ -2,7 +2,6 @@ using System.Net;
 using System.Reflection;
 using System.Text.Json;
 using Serilog;
-using ILogger = Serilog.ILogger;
 
 namespace Testably.Server;
 
@@ -53,13 +52,5 @@ public class Program
 		app.MapControllers();
 
 		app.Run();
-	}
-
-	private static ILogger CreateSerilogLogger()
-	{
-		var logPath = $"logs/log.txt";
-		return new LoggerConfiguration()
-			.WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
-			.CreateLogger();
 	}
 }
