@@ -15,6 +15,7 @@ public class Program
 
 		var builder = WebApplication.CreateBuilder(args);
 
+		// https://www.ionos.de/hilfe/index.php?id=4426
 		var webProxy = new WebProxy("http://winproxy.server.lan:3128");
 		// Add services to the container.
 		builder.Services.AddHttpClient("Proxied")
