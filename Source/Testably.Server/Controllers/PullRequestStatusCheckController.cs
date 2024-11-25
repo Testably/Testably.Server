@@ -12,7 +12,7 @@ namespace Testably.Server.Controllers;
 [AllowAnonymous]
 public class PullRequestStatusCheckController : ControllerBase
 {
-	private const string[] RepositoryOwners = ["Testably", "aweXpect"];
+	private static readonly string[] RepositoryOwners = ["Testably", "aweXpect"];
 
 	private const string SuccessMessage =
 		"The PR title must conform to the conventional commits guideline.";
