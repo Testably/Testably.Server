@@ -67,7 +67,20 @@ public class PullRequestStatusCheckController : ControllerBase
 			return BadRequest($"Only public repositories from '{string.Join(", ", RepositoryOwners)}' are supported!");
 		}
 
-		var bearerToken = _configuration.GetValue<string>("GithubBearerToken");
+		var bearerToken = pullRequestModel.Repository.Owner.Login switch
+		{
+			"Testably" => _configuration.GetValue<string>("testablyToken"),
+			"aweXpect" => _configuration.GetValue<string>("aweXpectToken"),
+			_ => ""
+		};
+		if (string.IsNullOrEmpty(bearerToken))
+		{
+			_logger.LogWarning("Could not find valid bearer token for {Organization}",
+				pullRequestModel.Repository.Owner.Login);
+			return StatusCode(StatusCodes.Status403Forbidden,
+				$"Could not find valid bearer token for {pullRequestModel.Repository.Owner.Login}");
+		}
+
 		using var client = _clientFactory.CreateClient("Proxied");
 		client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Testably",
 			Assembly.GetExecutingAssembly().GetName().Version.ToString()));
@@ -85,6 +98,7 @@ public class PullRequestStatusCheckController : ControllerBase
 		if (!response.IsSuccessStatusCode)
 		{
 			var responseContent = await response.Content.ReadAsStringAsync();
+			_logger.LogWarning("GitHub API '{RequestUri}' not available: {ResponseContent}", requestUri, responseContent);
 			return StatusCode(StatusCodes.Status500InternalServerError,
 				$"GitHub API '{requestUri}' not available: {responseContent}");
 		}
@@ -96,6 +110,7 @@ public class PullRequestStatusCheckController : ControllerBase
 		if (!jsonDocument.RootElement.TryGetProperty("title", out var titleProperty) ||
 		    titleProperty.GetString() == null)
 		{
+			_logger.LogWarning("GitHub API '{RequestUri}' returned an invalid response (missing title).", requestUri);
 			return StatusCode(StatusCodes.Status500InternalServerError,
 				$"GitHub API '{requestUri}' returned an invalid response (missing title).");
 		}
@@ -104,6 +119,7 @@ public class PullRequestStatusCheckController : ControllerBase
 		    !headProperty.TryGetProperty("sha", out var shaProperty) ||
 		    shaProperty.GetString() == null)
 		{
+			_logger.LogWarning("GitHub API '{RequestUri}' returned an invalid response (missing head.sha).", requestUri);
 			return StatusCode(StatusCodes.Status500InternalServerError,
 				$"GitHub API '{requestUri}' returned an invalid response (missing head.sha).");
 		}

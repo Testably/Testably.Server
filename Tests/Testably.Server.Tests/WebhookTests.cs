@@ -33,7 +33,8 @@ public class WebhookTests
 					sentStatusCheck = c;
 					return "";
 				}));
-		await using var factory = new TestFactory(httpClientFactoryMock.Object);
+		await using var factory = new TestFactory(httpClientFactoryMock.Object,
+			c => c.Add("testablyToken", "foo"));
 		using var client = factory.CreateClient();
 		client.DefaultRequestHeaders.Add("x-github-event", "pull_request");
 		using var content = new StringContent(webhookPayload, mediaType: "application/json",
