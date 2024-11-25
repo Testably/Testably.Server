@@ -61,7 +61,7 @@ public class PullRequestStatusCheckController : ControllerBase
 		}
 
 		if (pullRequestModel.Repository.Private ||
-		    RepositoryOwners.All(repositoryOwner => pullRequestModel.Repository.Owner.Login != repositoryOwner)
+		    RepositoryOwners.All(repositoryOwner => pullRequestModel.Repository.Owner.Login != repositoryOwner))
 		{
 			return BadRequest($"Only public repositories from '{string.Join(", ", RepositoryOwners)}' are supported!");
 		}
