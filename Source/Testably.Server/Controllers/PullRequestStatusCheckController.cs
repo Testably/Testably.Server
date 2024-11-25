@@ -72,7 +72,7 @@ public class PullRequestStatusCheckController : ControllerBase
 			"Testably" => _configuration.GetValue<string>("testablyToken"),
 			"aweXpect" => _configuration.GetValue<string>("aweXpectToken"),
 			_ => ""
-		}
+		};
 		if (string.IsNullOrEmpty(bearerToken))
 		{
 			_logger.LogWarning("Could not find valid bearer token for {Organization}",
