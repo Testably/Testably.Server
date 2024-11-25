@@ -27,6 +27,7 @@ public class PullRequestStatusCheckController : ControllerBase
 		"build",
 		"chore",
 		"ci",
+  		"coverage",
 		"docs",
 		"perf",
 		"refactor",
