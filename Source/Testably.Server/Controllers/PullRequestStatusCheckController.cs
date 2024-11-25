@@ -12,7 +12,7 @@ namespace Testably.Server.Controllers;
 [AllowAnonymous]
 public class PullRequestStatusCheckController : ControllerBase
 {
-	private const string RepositoryOwner = "Testably";
+	private static readonly string[] RepositoryOwners = ["Testably", "aweXpect"];
 
 	private const string SuccessMessage =
 		"The PR title must conform to the conventional commits guideline.";
@@ -62,9 +62,9 @@ public class PullRequestStatusCheckController : ControllerBase
 		}
 
 		if (pullRequestModel.Repository.Private ||
-		    pullRequestModel.Repository.Owner.Login != RepositoryOwner)
+		    RepositoryOwners.All(repositoryOwner => pullRequestModel.Repository.Owner.Login != repositoryOwner))
 		{
-			return BadRequest($"Only public repositories from '{RepositoryOwner}' are supported!");
+			return BadRequest($"Only public repositories from '{string.Join(", ", RepositoryOwners)}' are supported!");
 		}
 
 		var bearerToken = _configuration.GetValue<string>("GithubBearerToken");
